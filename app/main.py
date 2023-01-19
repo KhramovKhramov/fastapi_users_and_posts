@@ -1,14 +1,11 @@
 from fastapi import Depends, FastAPI
 from fastapi_users import FastAPIUsers
-from sqlalchemy import delete, insert, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.auth import auth_backend
-from auth.manager import get_user_manager
-from auth.schemas import UserCreate, UserRead
-from database.db import User, get_async_session
-from database.models import post
-from database.schemas import CorrectPost
+from app.auth.auth import auth_backend
+from app.auth.manager import get_user_manager
+from app.auth.schemas import UserCreate, UserRead
+from app.database.db import User
+from app.posts.router import router as router_posts
 
 app = FastAPI(
     title='Posting App'
@@ -31,38 +28,5 @@ app.include_router(
     tags=["auth"],
 )
 
+app.include_router(router_posts)
 
-@app.get('/posts/')
-async def get_all_posts(session: AsyncSession = Depends(get_async_session)):
-    query = select(post)
-    result = await session.execute(query)
-
-    return result.all()
-    
-
-@app.get('/posts/{post_id}')
-async def get_post(post_id: int, session: AsyncSession = Depends(get_async_session)):
-    query = select(post).where(post.c.id == post_id)
-    result = await session.execute(query)
-    our_post = result.first()
-    if our_post:
-        return our_post
-    return f'post with id: {post_id} not found'
-
-@app.delete('/posts/{post_id}')
-async def delete_post(post_id: int, session: AsyncSession = Depends(get_async_session)):
-    stmt = delete(post).where(post.c.id == post_id)
-    await session.execute(stmt)
-    await session.commit()
-
-    return {'status': 200}
-
-    
-
-@app.post('/posts/create')
-async def add_post(new_post: CorrectPost, session: AsyncSession = Depends(get_async_session)):
-    stmt = insert(post).values(**new_post.dict())
-    await session.execute(stmt)
-    await session.commit()
-
-    return {'status': 200}
