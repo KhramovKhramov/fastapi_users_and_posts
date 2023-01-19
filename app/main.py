@@ -1,14 +1,36 @@
 from fastapi import Depends, FastAPI
+from fastapi_users import FastAPIUsers
 from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.db import get_async_session
+from auth.auth import auth_backend
+from auth.manager import get_user_manager
+from auth.schemas import UserCreate, UserRead
+from database.db import User, get_async_session
 from database.models import post
 from database.schemas import CorrectPost
 
 app = FastAPI(
     title='Posting App'
 )
+
+fastapi_users = FastAPIUsers[User, int](
+    get_user_manager,
+    [auth_backend],
+)
+
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+
 
 @app.get('/posts/')
 async def get_all_posts(session: AsyncSession = Depends(get_async_session)):
