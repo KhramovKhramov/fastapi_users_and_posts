@@ -5,8 +5,13 @@ from sqlalchemy import pool
 
 from alembic import context
 
+import os
+import sys
+
+sys.path.append(os.path.join(sys.path[0], 'app'))
+
 from config import SQLITE_DB_NAME
-from database.models import metadata
+from app.database.models import metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
