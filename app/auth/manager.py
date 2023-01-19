@@ -4,7 +4,7 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
 
 import config
-from database.db import User, get_user_db
+from app.database.db import User, get_user_db
 
 
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
