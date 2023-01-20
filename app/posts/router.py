@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db import get_async_session
@@ -38,6 +38,15 @@ async def delete_post(post_id: int, session: AsyncSession = Depends(get_async_se
 @router.post('/create')
 async def add_post(new_post: CorrectPost, session: AsyncSession = Depends(get_async_session)):
     stmt = insert(post).values(**new_post.dict())
+    await session.execute(stmt)
+    await session.commit()
+
+    return {'status': 200}
+
+@router.post('/{post_id}')
+async def update_post(post_id: int, update_post: CorrectPost, session: AsyncSession = Depends(get_async_session)):
+    stmt = update(post).values(**update_post.dict()).where(post.c.id == post_id)
+
     await session.execute(stmt)
     await session.commit()
 
